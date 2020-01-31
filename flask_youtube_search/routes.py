@@ -7,7 +7,6 @@ main = Blueprint('main', __name__)
 
 @main.route('/', methods=['GET', 'POST'])
 def index():
-
     search_url = 'https://www.googleapis.com/youtube/v3/search'
     video_url = 'https://www.googleapis.com/youtube/v3/videos'
 
@@ -15,8 +14,13 @@ def index():
     video_ids = []
 
     if request.method == 'POST':
-    
-            # To search we have to provide the following parameters according to YOUTUBE DATA API
+        with open('in.csv','r',errors='ignore') as csv_file:
+          csv_reader = csv.reader(csv_file)
+            
+          for line in csv_reader:
+            # city = line[0]
+            lat = line[1]
+            lng = line[2]
             search_params = {
                 'key' : current_app.config['YOUTUBE_API_KEY'],
                 'q' : request.form.get('query'),
@@ -25,42 +29,44 @@ def index():
                 'type' : 'video',
                 # 'channelType' : 'show',
                 # 'relevanceLanguage':'te',
-                'location':'27.0238,74.2179',
+                'location':f'{lat},{lng}',
                 'locationRadius': '1000km'
             }
-            # Getting search results
+            print("Test start")
+            print(lat)
+            print(lng)
+            print("Test end")
             r = requests.get(search_url, params=search_params)
-
+            print("This is the response")
+            print(r.json())
             results = r.json()['items']
+            print(results)
             # video_ids = []
-            # storing search videos Id
             for result in results:
                 video_ids.append(result['id']['videoId'])
 
-    if request.form.get('submit') == 'lucky':
-        return redirect(f'https://www.youtube.com/watch?v={ video_ids[0] }')
+        if request.form.get('submit') == 'lucky':
+            return redirect(f'https://www.youtube.com/watch?v={ video_ids[0] }')
 
-    # fetching videos information to fetch it we have to provide the following parameters
-    video_params = {
-        'key' : current_app.config['YOUTUBE_API_KEY'],
-        'id' : ','.join(video_ids),
-        'part' : 'snippet,contentDetails',
-        # 'regionCode':'IN',
-        'maxResults' : 9,
-        # 'h1':'te'
-    }
-    # Response according to params
-    r = requests.get(video_url, params=video_params)
-    # storing the video info. 
-    results = r.json()['items']
-    for result in results:
-        video_data = {
-            'id' : result['id'],
-            'url' : f'https://www.youtube.com/watch?v={ result["id"] }',
-            'thumbnail' : result['snippet']['thumbnails']['high']['url'],
-            'duration' : int(parse_duration(result['contentDetails']['duration']).total_seconds() // 60),
-            'title' : result['snippet']['title'],
+        video_params = {
+            'key' : current_app.config['YOUTUBE_API_KEY'],
+            'id' : ','.join(video_ids),
+            'part' : 'snippet,contentDetails',
+            # 'regionCode':'IN',
+            'maxResults' : 9,
+            # 'h1':'te'
         }
-        videos.append(video_data)
+
+        r = requests.get(video_url, params=video_params)
+        results = r.json()['items']
+        for result in results:
+            video_data = {
+                'id' : result['id'],
+                'url' : f'https://www.youtube.com/watch?v={ result["id"] }',
+                'thumbnail' : result['snippet']['thumbnails']['high']['url'],
+                'duration' : int(parse_duration(result['contentDetails']['duration']).total_seconds() // 60),
+                'title' : result['snippet']['title'],
+            }
+            videos.append(video_data)
 
     return render_template('index.html', videos=videos)
