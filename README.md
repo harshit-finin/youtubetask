@@ -9,7 +9,7 @@ open dir flask_youtube_search
 ```
 
 ```
-open git bash
+open cmd
 ```
 
 Execute the following command to run 
