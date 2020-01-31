@@ -1,7 +1,18 @@
 # Trying to collect vernacular youtube content creators list  
 
 
-### Execute the following command to run
+### steps to run the program
+
+
+```
+open dir flask_youtube_search
+```
+
+```
+open git bash
+```
+
+Execute the following command to run 
 
 ```
 flask run
